@@ -92,7 +92,7 @@ void Create_particles(std::vector<Particle>& particles, const int number) {
 
 class Button {
 public:
-    Button(sf::Vector2f size, sf::Vector2f position, std::string text, sf::Font& font) {
+    Button(sf::Vector2f position, sf::Vector2f size, std::string text, sf::Font& font) {
         button.setSize(size);
         button.setFillColor(sf::Color(150,150,150));
         button.setPosition(position);
@@ -134,6 +134,108 @@ private:
     sf::Text buttonText;
 };
 
+#include <SFML/Graphics.hpp>
+#include <sstream> // For stringstream to convert float to string
+
+class Slider {
+public:
+    // Constructor to initialize the slider, label and handle
+    Slider(float x, float y, float width, float height, const sf::Color& trackColor, const sf::Color& handleColor, const sf::Font& font, const std::string& labelText) {
+        // Set up the slider track (bar)
+        track.setSize(sf::Vector2f(width, height));
+        track.setFillColor(trackColor);
+        track.setPosition(x, y);
+
+        // Set up the slider handle (thumb)
+        handle.setRadius(height); 
+        handle.setFillColor(handleColor);
+        handle.setPosition(x, y - height / 2); // Center the handle vertically
+
+        // Set up the label (above the slider)
+        label.setFont(font);
+        label.setCharacterSize(18);  // Text size
+        label.setFillColor(sf::Color::White);
+
+        // Set initial values
+        isDragging = false;
+        minPosX = x;
+        maxPosX = x + width - handle.getRadius();  // Set slider bounds based on the handle size
+        label_text = labelText;
+
+        // Initialize the text above the slider with the label text
+        updateLabel();
+    }
+
+    // Function to draw the slider and its components
+    void draw(sf::RenderWindow& window) {
+        window.draw(track);    // Draw the track
+        window.draw(handle);   // Draw the handle
+        window.draw(label);    // Draw the label
+    }
+
+    // Function to handle mouse events for the slider
+    void handleEvent(const sf::Event& event, sf::RenderWindow& window) {
+        // Handle mouse press event to start dragging
+        if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
+            sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+            if (handle.getGlobalBounds().contains(static_cast<float>(mousePos.x), static_cast<float>(mousePos.y))) {
+                isDragging = true;
+            }
+        }
+
+        // Handle mouse release event to stop dragging
+        if (event.type == sf::Event::MouseButtonReleased) {
+            isDragging = false;
+        }
+
+        // If dragging, update the position of the handle
+        if (isDragging) {
+            sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+            float newPosX = static_cast<float>(mousePos.x) - handle.getRadius() / 2;
+
+            // Constrain the handle position within the track
+            if (newPosX < minPosX) newPosX = minPosX;
+            if (newPosX > maxPosX) newPosX = maxPosX;
+
+            handle.setPosition(newPosX, handle.getPosition().y);  // Update handle position
+            
+            // Update the text above the slider with the current value
+            updateLabel();
+        }
+    }
+
+    // Function to get the current value of the slider (from 0.0 to 1.0)
+    float getValue() const {
+        return (handle.getPosition().x - minPosX) / (maxPosX - minPosX);
+    }
+
+private:
+    sf::RectangleShape track;  // The track (bar) of the slider
+    sf::CircleShape handle; // The handle (thumb) of the slider
+    sf::Text label;            // The text label above the slider
+    bool isDragging;           // Whether the handle is being dragged
+    float minPosX, maxPosX;    // Min and max positions for the handle
+    std::string label_text;    // The text of the label
+
+    // Function to update the label with the current slider value
+    void updateLabel() {
+        // Create a string stream to format the text
+        std::stringstream ss;
+        ss << label_text << ": " << static_cast<int>(getValue() * 100); // Convert value to percentage
+
+        // Set the updated text to the label
+        label.setString(ss.str());
+
+        // Re-center the label text above the slider
+        sf::FloatRect textBounds = label.getLocalBounds();
+        label.setPosition(
+            track.getPosition().x + (track.getSize().x / 2.0f) - (textBounds.width / 2.0f),  // Center horizontally
+            track.getPosition().y - track.getSize().y * 3                                   // Position above the slider
+        );
+    }
+};
+
+
 int main() {
 // Create a window for visualization using SFML
     sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Particle Life Simulation");
@@ -144,8 +246,10 @@ int main() {
         return -1;
     }
     
-    Button restart_button(sf::Vector2f(110, 50), sf::Vector2f(MAP_WIDTH+70, 20), "Restart",font);
-    Button shuffle_button(sf::Vector2f(110, 50), sf::Vector2f(MAP_WIDTH+220,20),"Shuffle",font);
+    Button restart_button(sf::Vector2f(MAP_WIDTH+70, 20), sf::Vector2f(110, 50),  "Restart",font);
+    Button shuffle_button(sf::Vector2f(MAP_WIDTH+220,20), sf::Vector2f(110, 50),"Shuffle",font);
+    Slider test_slider(MAP_WIDTH+100,130,250,10,sf::Color::White,sf::Color::Magenta,font,"keimeno");
+
     std::vector<Particle> particles;
     Create_particles(particles,number_of_particles);
 
@@ -159,8 +263,9 @@ int main() {
                 window.clear(sf::Color::Black);
                 particles.clear();
                 Create_particles(particles,number_of_particles);
-
             }
+
+            test_slider.handleEvent(event,window);
         }
 
         // Update particle interactions
@@ -195,6 +300,7 @@ int main() {
 
         restart_button.draw(window);
         shuffle_button.draw(window);
+        test_slider.draw(window);
         window.display();
     }
     return 0;
