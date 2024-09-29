@@ -244,7 +244,7 @@ public:
 
         // Calculate the new handle position based on the value
         float handlePosX = minPosX + ((current_value - min_value) / (max_value - min_value)) * (maxPosX - minPosX);
-        handle.setPosition(handlePosX, track.getPosition().y);
+        handle.setPosition(handlePosX, handle.getPosition().y);
 
         // Update the label to display the new value
         updateLabel();
@@ -314,6 +314,15 @@ int main() {
     Slider slider_force_range(sf::Vector2f(MAP_WIDTH+50, 130), slider_size, sf::Color::White, sf::Color::Magenta, font, "FORCE RANGE", 0, FORCE_RANGE);
     Slider slider_GG(sf::Vector2f(MAP_WIDTH+50, 190), slider_size, sf::Color::Green, sf::Color::White, font, "GREEN TO GREEN FORCE", -MAX_FORCE,MAX_FORCE);
     Slider slider_GY(sf::Vector2f(MAP_WIDTH+50, 250), slider_size, sf::Color::Green, sf::Color::Yellow, font, "GREEN TO YELLOW FORCE", -MAX_FORCE,MAX_FORCE);
+    Slider slider_GR(sf::Vector2f(MAP_WIDTH+50, 310), slider_size, sf::Color::Green, sf::Color::Red, font, "GREEN TO RED FORCE", -MAX_FORCE,MAX_FORCE);
+
+    Slider slider_RG(sf::Vector2f(MAP_WIDTH+50, 370), slider_size, sf::Color::Red, sf::Color::Green, font, "RED TO GREEN FORCE", -MAX_FORCE,MAX_FORCE);
+    Slider slider_RY(sf::Vector2f(MAP_WIDTH+50, 430), slider_size, sf::Color::Red, sf::Color::Yellow, font, "RED TO YELLOW FORCE", -MAX_FORCE,MAX_FORCE);
+    Slider slider_RR(sf::Vector2f(MAP_WIDTH+50, 490), slider_size, sf::Color::Red, sf::Color::White, font, "RED TO RED FORCE", -MAX_FORCE,MAX_FORCE);
+
+    Slider slider_YG(sf::Vector2f(MAP_WIDTH+50, 550), slider_size, sf::Color::Yellow, sf::Color::Green, font, "YELLOW TO GREEN FORCE", -MAX_FORCE,MAX_FORCE);
+    Slider slider_YY(sf::Vector2f(MAP_WIDTH+50, 610), slider_size, sf::Color::Yellow, sf::Color::White, font, "YELLOW TO YELLOW FORCE", -MAX_FORCE,MAX_FORCE);
+    Slider slider_YR(sf::Vector2f(MAP_WIDTH+50, 670), slider_size, sf::Color::Yellow, sf::Color::Red, font, "YELLOW TO RED FORCE", -MAX_FORCE,MAX_FORCE);
 
     std::vector<Particle> particles;
     Create_particles(particles,number_of_particles);
@@ -336,6 +345,14 @@ int main() {
                 printMatrixAsTable(force_matrix);
                 slider_GG.set_value(force_matrix[GREEN][GREEN]);
                 slider_GY.set_value(force_matrix[GREEN][YELLOW]);
+                slider_GR.set_value(force_matrix[GREEN][RED]);
+                slider_RG.set_value(force_matrix[RED][GREEN]);
+                slider_RY.set_value(force_matrix[RED][YELLOW]);
+                slider_RR.set_value(force_matrix[RED][RED]);
+                slider_YG.set_value(force_matrix[YELLOW][GREEN]);
+                slider_YY.set_value(force_matrix[YELLOW][YELLOW]);
+                slider_YR.set_value(force_matrix[YELLOW][RED]);
+
             }
             // Force Range Slider
             if (slider_force_range.handleEvent(event,window)) {
@@ -352,6 +369,47 @@ int main() {
             if (slider_GY.handleEvent(event,window)) {
                 // update GY force
                 force_matrix[GREEN][YELLOW] = slider_GY.getValue();
+                printMatrixAsTable(force_matrix);
+            }
+            // GR Slider
+            if (slider_GR.handleEvent(event,window)) {
+                // update GR force
+                force_matrix[GREEN][RED] = slider_GR.getValue();
+                printMatrixAsTable(force_matrix);
+            }
+            // RG Slider
+            if (slider_RG.handleEvent(event,window)) {
+                // update RG Force
+                force_matrix[RED][GREEN] = slider_RG.getValue();
+                printMatrixAsTable(force_matrix);
+            }
+            // RY Slider
+            if (slider_RY.handleEvent(event,window)) {
+                // update RY force
+                force_matrix[RED][YELLOW] = slider_RY.getValue();
+                printMatrixAsTable(force_matrix);
+            }
+            // RR Slider
+            if (slider_RR.handleEvent(event,window)) {
+                // update RR force
+                force_matrix[RED][RED] = slider_RR.getValue();
+                printMatrixAsTable(force_matrix);
+            }// YG Slider
+            if (slider_YG.handleEvent(event,window)) {
+                // update YG Force
+                force_matrix[YELLOW][GREEN] = slider_YG.getValue();
+                printMatrixAsTable(force_matrix);
+            }
+            // YY Slider
+            if (slider_YY.handleEvent(event,window)) {
+                // update YY force
+                force_matrix[YELLOW][YELLOW] = slider_YY.getValue();
+                printMatrixAsTable(force_matrix);
+            }
+            // YR Slider
+            if (slider_YR.handleEvent(event,window)) {
+                // update YR force
+                force_matrix[YELLOW][RED] = slider_YR.getValue();
                 printMatrixAsTable(force_matrix);
             }
         }
@@ -392,6 +450,14 @@ int main() {
         slider_force_range.draw(window);
         slider_GG.draw(window);
         slider_GY.draw(window);
+        slider_GR.draw(window);
+        slider_RG.draw(window);
+        slider_RY.draw(window);
+        slider_RR.draw(window);
+        slider_YG.draw(window);
+        slider_YY.draw(window);
+        slider_YR.draw(window);
+
         window.display();
     }
     return 0;
