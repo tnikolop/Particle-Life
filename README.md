@@ -25,3 +25,5 @@ to create_particles isws einai anapoda ta i j
     to vector isws na min einai to katalhlo structure?
 to particle update position isws ne eprepe na mpei sto apo panw for loop
 to velocity dt function
+
+bazei to viscosity ekso apo to 2o loop enw egw to exw mesa
