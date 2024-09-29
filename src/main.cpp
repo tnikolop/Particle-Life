@@ -1,6 +1,7 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include <math.h>
+#include <sstream> // For stringstream to convert float to string
 
 // Constant Variables
 const short WINDOW_WIDTH = 1200;
@@ -9,16 +10,14 @@ const short MAP_BORDER = 10;
 const short MAP_WIDTH = 800 + MAP_BORDER;
 const short MAP_HEIGHT = 800 + MAP_BORDER;
 const short ATOM_WIDTH = 3;
-const short FORCE_RANGE = 600;
-const short number_of_particles = 150;
-const short N_GREENS = 150;
-const short N_REDS = 150;
-const short N_YELLOWS = 150;
-const short total_particles = N_GREENS+N_REDS+N_YELLOWS;
-const int NUM_TYPES = 3;  // Number of different particle types
-// RED      0
-// GREEN    1
-// YELLOW   2
+const float MAX_FORCE = 25;
+const int NUM_TYPES = 3;    // Number of different particle types
+                            // RED      0
+                            // GREEN    1
+                            // YELLOW   2
+short FORCE_RANGE = 600;
+short number_of_particles = 150;    // per type (color)
+short total_particles = number_of_particles*NUM_TYPES;
 
 // Interaction matrix: interaction[i][j] represents the interaction force between type i and type j particles
 float interaction[NUM_TYPES][NUM_TYPES] = {
@@ -134,13 +133,12 @@ private:
     sf::Text buttonText;
 };
 
-#include <SFML/Graphics.hpp>
-#include <sstream> // For stringstream to convert float to string
-
 class Slider {
 public:
     // Constructor to initialize the slider, label and handle
-    Slider(float x, float y, float width, float height, const sf::Color& trackColor, const sf::Color& handleColor, const sf::Font& font, const std::string& labelText) {
+    Slider(float x, float y, float width, float height, const sf::Color& trackColor, const sf::Color& handleColor,
+            const sf::Font& font, const std::string& labelText, short min_val, short max_val) 
+    {
         // Set up the slider track (bar)
         track.setSize(sf::Vector2f(width, height));
         track.setFillColor(trackColor);
@@ -161,6 +159,8 @@ public:
         minPosX = x;
         maxPosX = x + width - handle.getRadius();  // Set slider bounds based on the handle size
         label_text = labelText;
+        min_value = min_val;
+        max_value = max_val;
 
         // Initialize the text above the slider with the label text
         updateLabel();
@@ -174,7 +174,7 @@ public:
     }
 
     // Function to handle mouse events for the slider
-    void handleEvent(const sf::Event& event, sf::RenderWindow& window) {
+    bool handleEvent(const sf::Event& event, sf::RenderWindow& window) {
         // Handle mouse press event to start dragging
         if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
             sf::Vector2i mousePos = sf::Mouse::getPosition(window);
@@ -191,22 +191,17 @@ public:
         // If dragging, update the position of the handle
         if (isDragging) {
             sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-            float newPosX = static_cast<float>(mousePos.x) - handle.getRadius() / 2;
-
-            // Constrain the handle position within the track
-            if (newPosX < minPosX) newPosX = minPosX;
-            if (newPosX > maxPosX) newPosX = maxPosX;
-
-            handle.setPosition(newPosX, handle.getPosition().y);  // Update handle position
-            
-            // Update the text above the slider with the current value
-            updateLabel();
+            update_handle_position(mousePos);
         }
+        return isDragging;
     }
 
-    // Function to get the current value of the slider (from 0.0 to 1.0)
+    // Function to get the current value of the slider
     float getValue() const {
-        return (handle.getPosition().x - minPosX) / (maxPosX - minPosX);
+        // calculate the normalized position of the handle in the track (0.0 - 1.0)
+        float pos = (handle.getPosition().x - minPosX) / (maxPosX - minPosX);
+        // return actual value;
+        return min_value + pos * (max_value - min_value);
     }
 
 private:
@@ -216,12 +211,14 @@ private:
     bool isDragging;           // Whether the handle is being dragged
     float minPosX, maxPosX;    // Min and max positions for the handle
     std::string label_text;    // The text of the label
+    short min_value;
+    short max_value;
 
     // Function to update the label with the current slider value
     void updateLabel() {
         // Create a string stream to format the text
         std::stringstream ss;
-        ss << label_text << ": " << static_cast<int>(getValue() * 100); // Convert value to percentage
+        ss << label_text << ": " << static_cast<int>(getValue()); // Convert value to percentage
 
         // Set the updated text to the label
         label.setString(ss.str());
@@ -233,6 +230,20 @@ private:
             track.getPosition().y - track.getSize().y * 3                                   // Position above the slider
         );
     }
+
+    // Update the position of the handle on the screen
+    void update_handle_position(const sf::Vector2i& mouse_pos)
+    {
+        float new_posX = static_cast<float>(mouse_pos.x) - handle.getRadius() / 2;
+
+        // Constrain the handle position within the track
+        if (new_posX < minPosX) new_posX = minPosX;
+        if (new_posX > maxPosX) new_posX = maxPosX;
+
+        handle.setPosition(new_posX, handle.getPosition().y);  // Update handle position
+        updateLabel();  // Update the text above the slider with the current value
+    }
+
 };
 
 
@@ -248,7 +259,7 @@ int main() {
     
     Button restart_button(sf::Vector2f(MAP_WIDTH+70, 20), sf::Vector2f(110, 50),  "Restart",font);
     Button shuffle_button(sf::Vector2f(MAP_WIDTH+220,20), sf::Vector2f(110, 50),"Shuffle",font);
-    Slider test_slider(MAP_WIDTH+100,130,250,10,sf::Color::White,sf::Color::Magenta,font,"keimeno");
+    Slider slider_force_range(MAP_WIDTH+50, 130, 300, 10, sf::Color::White, sf::Color::Magenta, font, "FORCE RANGE", 0, FORCE_RANGE);
 
     std::vector<Particle> particles;
     Create_particles(particles,number_of_particles);
@@ -259,13 +270,16 @@ int main() {
             if (event.type == sf::Event::Closed)
                 window.close();
 
-            if (event.type == sf::Event::MouseButtonPressed && restart_button.isMouseOver(window)) {
+            if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left && restart_button.isMouseOver(window)) {
                 window.clear(sf::Color::Black);
                 particles.clear();
                 Create_particles(particles,number_of_particles);
             }
 
-            test_slider.handleEvent(event,window);
+            if (slider_force_range.handleEvent(event,window)) {
+                // update force range
+                FORCE_RANGE = slider_force_range.getValue();
+            }
         }
 
         // Update particle interactions
@@ -300,7 +314,7 @@ int main() {
 
         restart_button.draw(window);
         shuffle_button.draw(window);
-        test_slider.draw(window);
+        slider_force_range.draw(window);
         window.display();
     }
     return 0;
