@@ -60,6 +60,7 @@ public:
     // Apply a force to the particle to change its velocity
     void applyForce(sf::Vector2f force, float dt) {
         velocity += force * dt;  // Change velocity based on applied force and time step
+        // velocity = (velocity+force) * dt;  // Change velocity based on applied force and time step
     }
 };
 
@@ -71,7 +72,7 @@ sf::Vector2f computeForce(const Particle& p1, const Particle& p2) {
         return sf::Vector2f(0.0f, 0.0f);  // Avoid division by zero also set limit g
 
     float force_strength = force_matrix[p1.type][p2.type] / (distance*distance);
-    direction /= distance;  // Normalize the direction giati mas noiazei mono to direction tou vector oxi to magnitude tou
+    // direction /= distance;  // Normalize the direction giati mas noiazei mono to direction tou vector oxi to magnitude tou
     // isws na xreiazetai na dieresw me distance^2 gia normalization alla den nomizw
     return direction * force_strength;
     } 
@@ -415,7 +416,7 @@ int main() {
         }
 
         // Update particle interactions
-        float dt = 0.1f;  // Time step
+        float dt = 0.1;  // Time step
         for (int i = 0; i < total_particles; ++i) {
             for (int j = 0; j < total_particles; ++j) {
                 if (i != j) {
