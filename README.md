@@ -19,3 +19,9 @@
  -  Run on remote Server
  -  Access Server Simulation from Browser
  -  Desktop application
+
+pithana problimata
+to create_particles isws einai anapoda ta i j
+    to vector isws na min einai to katalhlo structure?
+to particle update position isws ne eprepe na mpei sto apo panw for loop
+to velocity dt function
