@@ -4,7 +4,6 @@
 #include <sstream> // For stringstream to convert float to string
 #include <cstdlib>  // For rand() and srand()
 
-
 // Constant Variables
 const short WINDOW_WIDTH = 1200;
 const short WINDOW_HEIGHT = 950;
@@ -43,7 +42,6 @@ public:
     void update() {
         position += velocity;  // Add velocity to position to move the particle
         
-       
         // the particles must always be on screen
         if (position.x > MAP_WIDTH)
             position.x = MAP_WIDTH - 1;
@@ -59,8 +57,8 @@ public:
     // na koitaksw to dt
     // Apply a force to the particle to change its velocity
     void applyForce(sf::Vector2f force, float dt) {
-        velocity += force * dt;  // Change velocity based on applied force and time step
-        // velocity = (velocity+force) * dt;  // Change velocity based on applied force and time step
+        // velocity += force * dt;  // Change velocity based on applied force and time step
+        velocity = (velocity+force) * dt;
     }
 };
 
@@ -80,7 +78,7 @@ sf::Vector2f computeForce(const Particle& p1, const Particle& p2) {
 void initialize_forces(float min, float max) {
     // etsi allazei to seed kathe 1 sec apo oti eida
     // opote to shuffle exei nohma kathe 1 sec
-    std::srand(static_cast<unsigned>(std::time(nullptr)));  // this is so we have different valus each time
+    // std::srand(static_cast<unsigned>(std::time(nullptr)));  // this is so we have different valus each time
 
     for (int i = 0; i < NUM_TYPES; ++i) {
         for (int j = 0; j < NUM_TYPES; ++j) {
@@ -316,11 +314,9 @@ int main() {
     Slider slider_GG(sf::Vector2f(MAP_WIDTH+50, 190), slider_size, sf::Color::Green, sf::Color::White, font, "GREEN TO GREEN FORCE", -MAX_FORCE,MAX_FORCE);
     Slider slider_GY(sf::Vector2f(MAP_WIDTH+50, 250), slider_size, sf::Color::Green, sf::Color::Yellow, font, "GREEN TO YELLOW FORCE", -MAX_FORCE,MAX_FORCE);
     Slider slider_GR(sf::Vector2f(MAP_WIDTH+50, 310), slider_size, sf::Color::Green, sf::Color::Red, font, "GREEN TO RED FORCE", -MAX_FORCE,MAX_FORCE);
-
     Slider slider_RG(sf::Vector2f(MAP_WIDTH+50, 370), slider_size, sf::Color::Red, sf::Color::Green, font, "RED TO GREEN FORCE", -MAX_FORCE,MAX_FORCE);
     Slider slider_RY(sf::Vector2f(MAP_WIDTH+50, 430), slider_size, sf::Color::Red, sf::Color::Yellow, font, "RED TO YELLOW FORCE", -MAX_FORCE,MAX_FORCE);
     Slider slider_RR(sf::Vector2f(MAP_WIDTH+50, 490), slider_size, sf::Color::Red, sf::Color::White, font, "RED TO RED FORCE", -MAX_FORCE,MAX_FORCE);
-
     Slider slider_YG(sf::Vector2f(MAP_WIDTH+50, 550), slider_size, sf::Color::Yellow, sf::Color::Green, font, "YELLOW TO GREEN FORCE", -MAX_FORCE,MAX_FORCE);
     Slider slider_YY(sf::Vector2f(MAP_WIDTH+50, 610), slider_size, sf::Color::Yellow, sf::Color::White, font, "YELLOW TO YELLOW FORCE", -MAX_FORCE,MAX_FORCE);
     Slider slider_YR(sf::Vector2f(MAP_WIDTH+50, 670), slider_size, sf::Color::Yellow, sf::Color::Red, font, "YELLOW TO RED FORCE", -MAX_FORCE,MAX_FORCE);
@@ -416,7 +412,7 @@ int main() {
         }
 
         // Update particle interactions
-        float dt = 0.1;  // Time step
+        float dt = 0.99;  // Time step
         for (int i = 0; i < total_particles; ++i) {
             for (int j = 0; j < total_particles; ++j) {
                 if (i != j) {
@@ -424,6 +420,7 @@ int main() {
                     particles[i].applyForce(force, dt);
                 }
             }
+            // particles[i].update();   // o allos sto github to kanei etsi alla den blepw diafora + etsi opws to exw egw fainete pio logiko
         }
         // Update particle positions
         for (auto& particle : particles) {
