@@ -3,6 +3,7 @@
 #include <math.h>
 #include <sstream> // For stringstream to convert float to string
 #include <cstdlib>  // For rand() and srand()
+#include <omp.h>
 
 // Constant Variables
 const short WINDOW_WIDTH = 1200;
@@ -10,16 +11,16 @@ const short WINDOW_HEIGHT = 950;
 const short MAP_BORDER = 5;
 const short MAP_WIDTH = 800 + MAP_BORDER;
 const short MAP_HEIGHT = 800 + MAP_BORDER;
-const short ATOM_WIDTH = 3;
+const short ATOM_WIDTH = 1;
 const float MAX_FORCE = 25;
-const short WALL_REPEL_BOUND = MAP_BORDER+10;  // the wall starts repelling particles if they're closer than 10 pixels
+const short WALL_REPEL_BOUND = MAP_BORDER+4;  // the wall starts repelling particles if they're closer than 10 pixels
 const float WALL_REPEL_FORCE = 0.1;
 const int NUM_TYPES = 3;    // Number of different particle types
 #define RED 0
 #define GREEN 1
 #define YELLOW 2
-short FORCE_RANGE = 600;
-short number_of_particles = 150;    // per type (color)
+short FORCE_RANGE = 200;
+short number_of_particles = 450;    // per type (color)
 short total_particles = number_of_particles*NUM_TYPES;
 
 // Interaction matrix: interaction[i][j] represents the interaction force between type i and type j particles
@@ -87,7 +88,7 @@ sf::Vector2f computeForce(const Particle& p1, const Particle& p2) {
 void initialize_forces(float min, float max) {
     // etsi allazei to seed kathe 1 sec apo oti eida
     // opote to shuffle exei nohma kathe 1 sec
-    // std::srand(static_cast<unsigned>(std::time(nullptr)));  // this is so we have different valus each time
+    std::srand(static_cast<unsigned>(std::time(nullptr)));  // this is so we have different valus each time
 
     for (int i = 0; i < NUM_TYPES; ++i) {
         for (int j = 0; j < NUM_TYPES; ++j) {
@@ -422,6 +423,7 @@ int main() {
 
         // Update particle interactions
         float dt = 0.99;  // Time step
+        #pragma omp parallel for
         for (int i = 0; i < total_particles; ++i) {
             for (int j = 0; j < total_particles; ++j) {
                 if (i != j) {
